@@ -28,15 +28,18 @@ app.config['JSON_SORT_KEYS'] = False
 app.config['ENV'] = os.getenv('FLASK_ENV', 'development')
 
 # Initialiser Firebase
+# Initialiser Firebase
 try:
-    if not firebase_admin.apps:
-        # Lire serviceAccountKey depuis variable d'env ou fichier
+    try:
+        firebase_admin.get_app()
+        logger.info("✓ Firebase already initialized")
+    except ValueError:
+        # App not initialized yet
         service_account_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', './serviceAccountKey.json')
 
         if os.path.exists(service_account_path):
             cred = credentials.Certificate(service_account_path)
         else:
-            # Fallback: lire depuis variable d'env (pour Render.com)
             import json
             service_account_json = os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY')
             if service_account_json:
