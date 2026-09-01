@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GestCompta - Gestion des Actifs et Passifs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #1a3a52 0%, #234565 100%);
+            color: white;
+            padding: 25px 20px;
+            overflow-y: auto;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.2);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 35px;
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(0,212,255,0.3);
+        }
+
+        .nav-section {
+            margin-bottom: 30px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #7fa3c0;
+            margin-bottom: 15px;
+            letter-spacing: 1.5px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            color: #b8d0e6;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(0, 212, 255, 0.15);
+            color: #00d4ff;
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, #00d4ff 0%, #0099cc 100%);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,212,255,0.3);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a3a52;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-box {
+            padding: 12px 18px;
+            border: 2px solid #e0e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0,212,255,0.2);
+        }
+
+        .btn-primary {
+            padding: 12px 24px;
+            background: linear-gradient(90deg, #00d4ff 0%, #0099cc 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,212,255,0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,212,255,0.4);
+        }
+
+        /* ===== PAGE CONTENT ===== */
+        .page-content {
+            display: none;
+        }
+
+        .page-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* ===== DASHBOARD ===== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 35px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 5px solid #00d4ff;
+            transition: all 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #7fa3c0;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1a3a52;
+        }
+
+        .kpi-change {
+            font-size: 12px;
+            color: #27ae60;
+            margin-top: 8px;
+        }
+
+        /* ===== TABLES ===== */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 25px;
+            background: linear-gradient(90deg, #1a3a52 0%, #234565 100%);
+            color: white;
+        }
+
+        .table-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8fafc;
+            border-bottom: 2px solid #e0e8f0;
+        }
+
+        th {
+            padding: 16px 20px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #7fa3c0;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e8f0f8;
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-paid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-partial {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-unpaid {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            background: #f0f5fa;
+            border: 1px solid #e0e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            margin-right: 5px;
+        }
+
+        .action-btn:hover {
+            background: #ff6b6b;
+            color: white;
+            border-color: #ff6b6b;
+        }
+
+        /* ===== PAGINATION ===== */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 20px;
+            background: #f8fafc;
+            border-top: 1px solid #e0e8f0;
+            min-height: 50px;
+        }
+
+        .pagination button {
+            padding: 10px 14px;
+            border: 2px solid #00d4ff;
+            background: white;
+            color: #00d4ff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #00d4ff;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,212,255,0.3);
+        }
+
+        .pagination button.active {
+            background: linear-gradient(90deg, #00d4ff 0%, #0099cc 100%);
+            color: white;
+            border-color: #0099cc;
+            box-shadow: 0 4px 12px rgba(0,212,255,0.4);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a3a52;
+            padding: 15px;
+            background: #f0f5fa;
+            border-bottom: 1px solid #e0e8f0;
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7fa3c0;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 220px;
+                padding: 15px;
+            }
+
+            .main-content {
+                margin-left: 220px;
+                padding: 15px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            td, th {
+                padding: 10px;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7fa3c0;
+        }
+
+        .spinner {
+            border: 3px solid #e0e8f0;
+            border-top: 3px solid #00d4ff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+                <span>GestCompta</span>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <div class="nav-item active" onclick="showPage('dashboard')">📈 Tableau de Bord</div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Opérations</div>
+                <div class="nav-item" onclick="showPage('factures')">📄 Factures</div>
+                <div class="nav-item" onclick="showPage('recus')">🧾 Reçus</div>
+                <div class="nav-item" onclick="showPage('depenses')">💰 Dépenses</div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Gestion</div>
+                <div class="nav-item" onclick="showPage('clients')">👥 Clients</div>
+                <div class="nav-item" onclick="showPage('fournisseurs')">🏭 Fournisseurs</div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Comptabilité</div>
+                <div class="nav-item" onclick="showPage('actifs')">📦 Actifs</div>
+                <div class="nav-item" onclick="showPage('passifs')">📉 Passifs</div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- DASHBOARD PAGE -->
+            <div id="dashboard" class="page-content active">
+                <div class="header">
+                    <h1>Tableau de Bord</h1>
+                </div>
+
+                <div class="dashboard-grid" id="dashboardStats">
+                    <div class="loading"><div class="spinner"></div>Chargement...</div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h2>📊 Dernières Factures</h2>
+                    </div>
+                    <table id="dashboardFactures">
+                        <thead>
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Date</th>
+                                <th>Montant</th>
+                                <th>Payé</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- FACTURES PAGE -->
+            <div id="factures" class="page-content">
+                <div class="header">
+                    <h1>Factures</h1>
+                    <div class="header-right">
+                        <input type="text" class="search-box" placeholder="🔍 Chercher..." id="searchFactures">
+                        <button class="btn-primary" onclick="showFactureForm()">+ Nouvelle Facture</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="facturesTable">
+                        <thead>
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Date</th>
+                                <th>Client</th>
+                                <th>Montant</th>
+                                <th>Payé</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="facturesList"></tbody>
+                    </table>
+                    <div class="pagination-info" id="facturesInfo"></div>
+                    <div class="pagination" id="facturesPagination"></div>
+                </div>
+            </div>
+
+            <!-- RECUS PAGE -->
+            <div id="recus" class="page-content">
+                <div class="header">
+                    <h1>Reçus</h1>
+                    <div class="header-right">
+                        <input type="text" class="search-box" placeholder="🔍 Chercher..." id="searchRecus">
+                        <button class="btn-primary" onclick="showRecuForm()">+ Nouveau Reçu</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="recusTable">
+                        <thead>
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Date</th>
+                                <th>Montant</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recusList"></tbody>
+                    </table>
+                    <div class="pagination-info" id="recusInfo"></div>
+                    <div class="pagination" id="recusPagination"></div>
+                </div>
+            </div>
+
+            <!-- DEPENSES PAGE -->
+            <div id="depenses" class="page-content">
+                <div class="header">
+                    <h1>Dépenses</h1>
+                    <div class="header-right">
+                        <input type="text" class="search-box" placeholder="🔍 Chercher..." id="searchDepenses">
+                        <button class="btn-primary" onclick="showDepenseForm()">+ Nouvelle Dépense</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="depensesTable">
+                        <thead>
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Date</th>
+                                <th>Catégorie</th>
+                                <th>Montant</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="depensesList"></tbody>
+                    </table>
+                    <div class="pagination-info" id="depensesInfo"></div>
+                    <div class="pagination" id="depensesPagination"></div>
+                </div>
+            </div>
+
+            <!-- CLIENTS PAGE -->
+            <div id="clients" class="page-content">
+                <div class="header">
+                    <h1>Clients</h1>
+                    <div class="header-right">
+                        <input type="text" class="search-box" placeholder="🔍 Chercher..." id="searchClients">
+                        <button class="btn-primary" onclick="showClientForm()">+ Nouveau Client</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="clientsTable">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Email</th>
+                                <th>Téléphone</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientsList"></tbody>
+                    </table>
+                    <div class="pagination-info" id="clientsInfo"></div>
+                    <div class="pagination" id="clientsPagination"></div>
+                </div>
+            </div>
+
+            <!-- FOURNISSEURS PAGE -->
+            <div id="fournisseurs" class="page-content">
+                <div class="header">
+                    <h1>Fournisseurs</h1>
+                </div>
+
+                <div class="table-container">
+                    <table id="fournisseursTable">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Email</th>
+                                <th>Téléphone</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fournisseursList"></tbody>
+                    </table>
+                    <div class="pagination-info" id="fournisseursInfo"></div>
+                    <div class="pagination" id="fournisseursPagination"></div>
+                </div>
+            </div>
+
+            <!-- ACTIFS PAGE -->
+            <div id="actifs" class="page-content">
+                <div class="header">
+                    <h1>Actifs</h1>
+                    <button class="btn-primary" onclick="showActifForm()">+ Nouvel Actif</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="actifsTable">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Valeur</th>
+                            </tr>
+                        </thead>
+                        <tbody id="actifsList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PASSIFS PAGE -->
+            <div id="passifs" class="page-content">
+                <div class="header">
+                    <h1>Passifs</h1>
+                    <button class="btn-primary" onclick="showPassifForm()">+ Nouveau Passif</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="passifsTable">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Valeur</th>
+                            </tr>
+                        </thead>
+                        <tbody id="passifsList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://gestcompta-api.onrender.com';
+        const ITEMS_PER_PAGE = 10;
+
+        // Données de pagination
+        let pagination = {
+            factures: { page: 1, data: [] },
+            recus: { page: 1, data: [] },
+            depenses: { page: 1, data: [] },
+            clients: { page: 1, data: [] },
+            fournisseurs: { page: 1, data: [] }
+        };
+
+        // Changer de page
+        function showPage(pageName) {
+            document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(pageName).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            event.target.closest('.nav-item').classList.add('active');
+
+            // Charger les données
+            if (pageName === 'dashboard') loadDashboard();
+            if (pageName === 'factures') loadFactures();
+            if (pageName === 'recus') loadRecus();
+            if (pageName === 'depenses') loadDepenses();
+            if (pageName === 'clients') loadClients();
+            if (pageName === 'fournisseurs') loadFournisseurs();
+            if (pageName === 'actifs') loadActifs();
+            if (pageName === 'passifs') loadPassifs();
+        }
+
+        // Fonction pour ajouter un timeout aux requêtes
+        async function fetchWithTimeout(url, timeout = 8000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                clearTimeout(timeoutId);
+                throw error;
+            }
+        }
+
+        // DASHBOARD
+        async function loadDashboard() {
+            console.log('🔄 Chargement du dashboard...');
+            console.log('API URL:', API_URL);
+
+            try {
+                // Afficher le spinner de chargement au début
+                document.getElementById('dashboardStats').innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">⏳ Chargement des données...</div>';
+
+                // Charger les données avec timeout (8 secondes)
+                console.log('📥 Récupération des factures...');
+                const factures = await fetchWithTimeout(`${API_URL}/api/factures`, 8000).catch(e => {
+                    console.error('❌ Erreur factures:', e);
+                    return [];
+                });
+
+                console.log('📥 Récupération des reçus...');
+                const recus = await fetchWithTimeout(`${API_URL}/api/recus`, 8000).catch(e => {
+                    console.error('❌ Erreur recus:', e);
+                    return [];
+                });
+
+                console.log('📥 Récupération des dépenses...');
+                const depenses = await fetchWithTimeout(`${API_URL}/api/depenses`, 8000).catch(e => {
+                    console.error('❌ Erreur depenses:', e);
+                    return [];
+                });
+
+                console.log('✅ Données reçues:', { factures: factures.length, recus: recus.length, depenses: depenses.length });
+
+                // Corriger les noms de champs pour correspondre aux données de l'API
+                const totalFactures = factures.reduce((sum, f) => sum + (f.montant || 0), 0);
+                const totalPaye = factures.reduce((sum, f) => sum + (f.paye || 0), 0);
+                const totalRecus = recus.reduce((sum, r) => sum + (r.montant || 0), 0);
+                const totalDepenses = depenses.reduce((sum, d) => sum + (d.montant || 0), 0);
+
+                // Calculer le pourcentage payé de manière sûre
+                const percentPaid = totalFactures > 0 ? Math.round(totalPaye/totalFactures*100) : 0;
+
+                console.log('💰 Totaux calculés:', { totalFactures, totalPaye, percentPaid });
+
+                document.getElementById('dashboardStats').innerHTML = `
+                    <div class="kpi-card">
+                        <div class="kpi-label">💰 Total Factures</div>
+                        <div class="kpi-value">${totalFactures.toLocaleString('fr-FR')} GNF</div>
+                        <div class="kpi-change">+${factures.length} factures</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">✅ Montant Payé</div>
+                        <div class="kpi-value">${totalPaye.toLocaleString('fr-FR')} GNF</div>
+                        <div class="kpi-change">${percentPaid}% du total</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">📋 Total Reçus</div>
+                        <div class="kpi-value">${totalRecus.toLocaleString('fr-FR')} GNF</div>
+                        <div class="kpi-change">${recus.length} reçus</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">💸 Total Dépenses</div>
+                        <div class="kpi-value">${totalDepenses.toLocaleString('fr-FR')} GNF</div>
+                        <div class="kpi-change">${depenses.length} dépenses</div>
+                    </div>
+                `;
+
+                // Afficher les 5 dernières factures (correspondre aux noms de champs de l'API)
+                const tbody = document.querySelector('#dashboardFactures tbody');
+                if (tbody) {
+                    tbody.innerHTML = factures.slice(0, 5).map(f => `
+                        <tr>
+                            <td><strong>${f.numero || 'N/A'}</strong></td>
+                            <td>${new Date(f.date).toLocaleDateString('fr-FR')}</td>
+                            <td><strong>${(f.montant || 0).toLocaleString('fr-FR')} GNF</strong></td>
+                            <td>${(f.paye || 0).toLocaleString('fr-FR')} GNF</td>
+                            <td><span class="status-badge ${f.statut === 'Payée' ? 'status-paid' : f.statut === 'Partiellement payée' ? 'status-partial' : 'status-unpaid'}">${f.statut || 'N/A'}</span></td>
+                        </tr>
+                    `).join('');
+                }
+
+                console.log('✅ Dashboard chargé avec succès');
+
+            } catch (e) {
+                console.error('❌ Erreur critique loadDashboard:', e);
+                const errorMsg = e.name === 'AbortError' ? 'Timeout - API non accessible' : e.message;
+                document.getElementById('dashboardStats').innerHTML = `
+                    <div class="kpi-card">
+                        <div class="kpi-label">❌ Erreur de Connexion</div>
+                        <div class="kpi-value">${errorMsg}</div>
+                        <div class="kpi-change">API: ${API_URL}</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">💡 Solution</div>
+                        <div class="kpi-value">Vérifier l'URL de l'API</div>
+                        <div class="kpi-change">F12 → Console pour plus de détails</div>
+                    </div>
+                `;
+                document.querySelector('#dashboardFactures tbody').innerHTML = `
+                    <tr><td colspan="5" style="text-align: center; color: #d9534f;">Impossible de charger les données. Vérifier la connexion API.</td></tr>
+                `;
+            }
+        }
+
+        // FACTURES
+        async function loadFactures() {
+            try {
+                const data = await fetch(`${API_URL}/api/factures`).then(r => r.json());
+                pagination.factures.data = data;
+                pagination.factures.page = 1;
+                setupSearch('factures');
+                displayPage('factures');
+            } catch (e) {
+                document.getElementById('facturesList').innerHTML = '<tr><td colspan="7">Erreur de chargement</td></tr>';
+            }
+        }
+
+        // RECUS
+        async function loadRecus() {
+            try {
+                const data = await fetch(`${API_URL}/api/recus`).then(r => r.json());
+                pagination.recus.data = data;
+                pagination.recus.page = 1;
+                setupSearch('recus');
+                displayPage('recus');
+            } catch (e) {
+                document.getElementById('recusList').innerHTML = '<tr><td colspan="4">Erreur de chargement</td></tr>';
+            }
+        }
+
+        // DEPENSES
+        async function loadDepenses() {
+            try {
+                const data = await fetch(`${API_URL}/api/depenses`).then(r => r.json());
+                pagination.depenses.data = data;
+                pagination.depenses.page = 1;
+                setupSearch('depenses');
+                displayPage('depenses');
+            } catch (e) {
+                document.getElementById('depensesList').innerHTML = '<tr><td colspan="5">Erreur de chargement</td></tr>';
+            }
+        }
+
+        // CLIENTS
+        async function loadClients() {
+            try {
+                const data = await fetch(`${API_URL}/api/clients`).then(r => r.json());
+                pagination.clients.data = data;
+                pagination.clients.page = 1;
+                setupSearch('clients');
+                displayPage('clients');
+            } catch (e) {
+                document.getElementById('clientsList').innerHTML = '<tr><td colspan="4">Erreur de chargement</td></tr>';
+            }
+        }
+
+        // FOURNISSEURS
+        async function loadFournisseurs() {
+            try {
+                const data = await fetch(`${API_URL}/api/fournisseurs`).then(r => r.json());
+                pagination.fournisseurs.data = data;
+                pagination.fournisseurs.page = 1;
+                setupSearch('fournisseurs');
+                displayPage('fournisseurs');
+            } catch (e) {
+                document.getElementById('fournisseursList').innerHTML = '<tr><td colspan="3">Erreur de chargement</td></tr>';
+            }
+        }
+
+        // ACTIFS
+        async function loadActifs() {
+            try {
+                const data = await fetch(`${API_URL}/api/actifs`).then(r => r.json());
+                document.querySelector('#actifsTable tbody').innerHTML = data.length ? data.map(a => `
+                    <tr>
+                        <td>${a.description || 'N/A'}</td>
+                        <td><strong>${(a.valeur || 0).toLocaleString('fr-FR')} GNF</strong></td>
+                    </tr>
+                `).join('') : '<tr><td colspan="2" style="text-align:center;">Aucun actif</td></tr>';
+            } catch (e) {
+                document.querySelector('#actifsTable tbody').innerHTML = '<tr><td colspan="2">Erreur de chargement</td></tr>';
+            }
+        }
+
+        // PASSIFS
+        async function loadPassifs() {
+            try {
+                const data = await fetch(`${API_URL}/api/passifs`).then(r => r.json());
+                document.querySelector('#passifsTable tbody').innerHTML = data.length ? data.map(p => `
+                    <tr>
+                        <td>${p.description || 'N/A'}</td>
+                        <td><strong>${(p.valeur || 0).toLocaleString('fr-FR')} GNF</strong></td>
+                    </tr>
+                `).join('') : '<tr><td colspan="2" style="text-align:center;">Aucun passif</td></tr>';
+            } catch (e) {
+                document.querySelector('#passifsTable tbody').innerHTML = '<tr><td colspan="2">Erreur de chargement</td></tr>';
+            }
+        }
+
+        // Afficher une page paginée
+        function displayPage(type) {
+            const data = pagination[type].data;
+            const page = pagination[type].page;
+            const start = (page - 1) * ITEMS_PER_PAGE;
+            const end = start + ITEMS_PER_PAGE;
+            const items = data.slice(start, end);
+            const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
+
+            // Afficher les données
+            if (type === 'factures') {
+                document.getElementById('facturesList').innerHTML = items.length ? items.map(f => `
+                    <tr>
+                        <td><strong>${f.number || 'N/A'}</strong></td>
+                        <td>${new Date(f.date).toLocaleDateString('fr-FR')}</td>
+                        <td>${f.clientId || 'N/A'}</td>
+                        <td><strong>${(f.totalAmount || 0).toLocaleString('fr-FR')} GNF</strong></td>
+                        <td>${(f.amountPaid || 0).toLocaleString('fr-FR')} GNF</td>
+                        <td><span class="status-badge ${f.status === 'Payée' ? 'status-paid' : f.status === 'Partiellement payée' ? 'status-partial' : 'status-unpaid'}">${f.status || 'N/A'}</span></td>
+                        <td><button class="action-btn" onclick="deleteFacture('${f.id}')">🗑️</button></td>
+                    </tr>
+                `).join('') : '<tr><td colspan="7" style="text-align:center;">Aucune facture</td></tr>';
+            }
+
+            if (type === 'recus') {
+                document.getElementById('recusList').innerHTML = items.length ? items.map(r => `
+                    <tr>
+                        <td><strong>${r.number || 'N/A'}</strong></td>
+                        <td>${new Date(r.date).toLocaleDateString('fr-FR')}</td>
+                        <td><strong>${(r.montant || 0).toLocaleString('fr-FR')} GNF</strong></td>
+                        <td><button class="action-btn" onclick="deleteRecu('${r.id}')">🗑️</button></td>
+                    </tr>
+                `).join('') : '<tr><td colspan="4" style="text-align:center;">Aucun reçu</td></tr>';
+            }
+
+            if (type === 'depenses') {
+                document.getElementById('depensesList').innerHTML = items.length ? items.map(d => `
+                    <tr>
+                        <td><strong>${d.number || 'N/A'}</strong></td>
+                        <td>${new Date(d.date).toLocaleDateString('fr-FR')}</td>
+                        <td>${d.categorie || 'N/A'}</td>
+                        <td><strong>${(d.montant || 0).toLocaleString('fr-FR')} GNF</strong></td>
+                        <td><button class="action-btn" onclick="deleteDepense('${d.id}')">🗑️</button></td>
+                    </tr>
+                `).join('') : '<tr><td colspan="5" style="text-align:center;">Aucune dépense</td></tr>';
+            }
+
+            if (type === 'clients') {
+                document.getElementById('clientsList').innerHTML = items.length ? items.map(c => `
+                    <tr>
+                        <td><strong>${c.nom || 'N/A'}</strong></td>
+                        <td>${c.email || 'N/A'}</td>
+                        <td>${c.telephone || 'N/A'}</td>
+                        <td><button class="action-btn" onclick="deleteClient('${c.id}')">🗑️</button></td>
+                    </tr>
+                `).join('') : '<tr><td colspan="4" style="text-align:center;">Aucun client</td></tr>';
+            }
+
+            if (type === 'fournisseurs') {
+                document.getElementById('fournisseursList').innerHTML = items.length ? items.map(f => `
+                    <tr>
+                        <td><strong>${f.nom || 'N/A'}</strong></td>
+                        <td>${f.email || 'N/A'}</td>
+                        <td>${f.telephone || 'N/A'}</td>
+                    </tr>
+                `).join('') : '<tr><td colspan="3" style="text-align:center;">Aucun fournisseur</td></tr>';
+            }
+
+            // Afficher les info de pagination
+            const start = (page - 1) * ITEMS_PER_PAGE + 1;
+            const end = Math.min(page * ITEMS_PER_PAGE, data.length);
+            const infoText = `📊 Affichage ${start}-${end} sur ${data.length} éléments | Page ${page}/${totalPages}`;
+            document.getElementById(type + 'Info').innerHTML = `<strong>${infoText}</strong>`;
+
+            // Afficher les boutons de pagination
+            let paginationHtml = '';
+
+            // Bouton Précédent
+            if (page > 1) {
+                paginationHtml += `<button onclick="changePage('${type}', ${page-1})">⬅️ Précédent</button>`;
+            } else {
+                paginationHtml += `<button disabled>⬅️ Précédent</button>`;
+            }
+
+            // Afficher les numéros de page
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= page - 1 && i <= page + 1)) {
+                    if (i > 1 && (i !== 2 && (i < page - 1))) {
+                        paginationHtml += '<span style="padding: 0 5px; color: #7fa3c0;">...</span>';
+                    }
+                    paginationHtml += `<button ${i === page ? 'class="active"' : ''} onclick="changePage('${type}', ${i})">${i}</button>`;
+                }
+            }
+
+            // Bouton Suivant
+            if (page < totalPages) {
+                paginationHtml += `<button onclick="changePage('${type}', ${page+1})">Suivant ➡️</button>`;
+            } else {
+                paginationHtml += `<button disabled>Suivant ➡️</button>`;
+            }
+
+            document.getElementById(type + 'Pagination').innerHTML = paginationHtml;
+        }
+
+        // Changer de page
+        function changePage(type, page) {
+            pagination[type].page = page;
+            displayPage(type);
+            document.querySelector('#' + type + 'Table').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Recherche
+        function setupSearch(type) {
+            const searchBox = document.getElementById('search' + type.charAt(0).toUpperCase() + type.slice(1));
+            if (searchBox) {
+                searchBox.addEventListener('keyup', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const allData = pagination[type].data;
+
+                    // Filtrer les données selon le type
+                    if (type === 'factures') {
+                        pagination[type].data = allData.filter(f =>
+                            (f.number || '').toLowerCase().includes(searchTerm) ||
+                            (f.clientId || '').toLowerCase().includes(searchTerm) ||
+                            (f.status || '').toLowerCase().includes(searchTerm)
+                        );
+                    } else if (type === 'recus') {
+                        pagination[type].data = allData.filter(r =>
+                            (r.number || '').toLowerCase().includes(searchTerm)
+                        );
+                    } else if (type === 'depenses') {
+                        pagination[type].data = allData.filter(d =>
+                            (d.number || '').toLowerCase().includes(searchTerm) ||
+                            (d.categorie || '').toLowerCase().includes(searchTerm)
+                        );
+                    } else if (type === 'clients') {
+                        pagination[type].data = allData.filter(c =>
+                            (c.nom || '').toLowerCase().includes(searchTerm) ||
+                            (c.email || '').toLowerCase().includes(searchTerm)
+                        );
+                    } else if (type === 'fournisseurs') {
+                        pagination[type].data = allData.filter(f =>
+                            (f.nom || '').toLowerCase().includes(searchTerm) ||
+                            (f.email || '').toLowerCase().includes(searchTerm)
+                        );
+                    }
+
+                    pagination[type].page = 1;
+                    displayPage(type);
+                });
+            }
+        }
+
+        // Supprimer une facture
+        async function deleteFacture(id) {
+            if (confirm('Êtes-vous sûr?')) {
+                await fetch(`${API_URL}/api/factures/${id}`, { method: 'DELETE' });
+                loadFactures();
+            }
+        }
+
+        // Supprimer un reçu
+        async function deleteRecu(id) {
+            if (confirm('Êtes-vous sûr?')) {
+                await fetch(`${API_URL}/api/recus/${id}`, { method: 'DELETE' });
+                loadRecus();
+            }
+        }
+
+        // Supprimer une dépense
+        async function deleteDepense(id) {
+            if (confirm('Êtes-vous sûr?')) {
+                await fetch(`${API_URL}/api/depenses/${id}`, { method: 'DELETE' });
+                loadDepenses();
+            }
+        }
+
+        // Supprimer un client
+        async function deleteClient(id) {
+            if (confirm('Êtes-vous sûr?')) {
+                await fetch(`${API_URL}/api/clients/${id}`, { method: 'DELETE' });
+                loadClients();
+            }
+        }
+
+        // Fonctions de formulaire (placeholder)
+        function showFactureForm() { alert('Fonction à implémenter'); }
+        function showRecuForm() { alert('Fonction à implémenter'); }
+        function showDepenseForm() { alert('Fonction à implémenter'); }
+        function showClientForm() { alert('Fonction à implémenter'); }
+        function showActifForm() { alert('Fonction à implémenter'); }
+        function showPassifForm() { alert('Fonction à implémenter'); }
+
+        // Charger le dashboard au démarrage
+        window.addEventListener('load', loadDashboard);
+    </script>
+</body>
+</html>
