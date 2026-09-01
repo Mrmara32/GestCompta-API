@@ -1,7 +1,7 @@
 """
 GestCompta - Backend API
 Gestion des Actifs et Passifs
-API Flask avec Firebase Realtime Database
+API Flask avec Google Cloud Firestore
 """
 
 import os
@@ -9,7 +9,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 import firebase_admin
-from firebase_admin import credentials, db
+from firebase_admin import credentials, firestore
 import logging
 
 # Configuration logging
@@ -28,18 +28,19 @@ app.config['JSON_SORT_KEYS'] = False
 app.config['ENV'] = os.getenv('FLASK_ENV', 'development')
 
 # Initialiser Firebase
-# Initialiser Firebase
 try:
     try:
         firebase_admin.get_app()
         logger.info("✓ Firebase already initialized")
     except ValueError:
         # App not initialized yet
+        # Lire serviceAccountKey depuis variable d'env ou fichier
         service_account_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', './serviceAccountKey.json')
 
         if os.path.exists(service_account_path):
             cred = credentials.Certificate(service_account_path)
         else:
+            # Fallback: lire depuis variable d'env (pour Render.com)
             import json
             service_account_json = os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY')
             if service_account_json:
@@ -47,13 +48,27 @@ try:
             else:
                 raise ValueError("Firebase credentials not found!")
 
-        firebase_admin.initialize_app(cred, {
-            'databaseURL': os.getenv('FIREBASE_DATABASE_URL')
-        })
+        firebase_admin.initialize_app(cred)
         logger.info("✓ Firebase initialized successfully")
+
+        # Initialiser Firestore
+        global db
+        db = firestore.client()
 except Exception as e:
     logger.error(f"✗ Firebase initialization failed: {e}")
     raise
+
+# ============================================================================
+# FONCTIONS UTILITAIRES
+# ============================================================================
+
+def convert_firestore_doc(doc):
+    """Convertir un document Firestore en dictionnaire"""
+    return {'id': doc.id, **doc.to_dict()} if doc.exists else None
+
+def docs_to_list(docs):
+    """Convertir les documents Firestore en liste"""
+    return [{'id': doc.id, **doc.to_dict()} for doc in docs]
 
 # ============================================================================
 # ROUTES GLOBALES
@@ -70,10 +85,10 @@ def health():
 
 @app.route('/api/health', methods=['GET'])
 def api_health():
-    """Health check with Firebase connection test"""
+    """Health check with Firestore connection test"""
     try:
-        ref = db.reference('/')
-        ref.get()  # Test connection
+        # Test Firestore connection
+        db.collection('_test').limit(1).stream()
         return jsonify({
             'status': 'ok',
             'firebase': 'connected',
@@ -94,14 +109,8 @@ def api_health():
 def get_factures():
     """Récupérer toutes les factures"""
     try:
-        ref = db.reference('factures')
-        factures = ref.get()
-
-        if not factures:
-            return jsonify([]), 200
-
-        # Convertir en liste avec IDs
-        result = [{'id': k, **v} for k, v in factures.items()]
+        docs = db.collection('invoices').stream()
+        result = docs_to_list(docs)
         return jsonify(result), 200
     except Exception as e:
         logger.error(f"Error fetching factures: {e}")
@@ -111,13 +120,12 @@ def get_factures():
 def get_facture(facture_id):
     """Récupérer une facture spécifique"""
     try:
-        ref = db.reference(f'factures/{facture_id}')
-        facture = ref.get()
+        doc = db.collection('invoices').document(facture_id).get()
 
-        if not facture:
+        if not doc.exists:
             return jsonify({'error': 'Facture not found'}), 404
 
-        return jsonify({'id': facture_id, **facture}), 200
+        return jsonify(convert_firestore_doc(doc)), 200
     except Exception as e:
         logger.error(f"Error fetching facture {facture_id}: {e}")
         return jsonify({'error': str(e)}), 500
@@ -141,12 +149,12 @@ def create_facture():
         data['paye'] = data.get('paye', 0)
         data['statut'] = data.get('statut', 'Non payée')
 
-        # Sauvegarder dans Firebase
-        ref = db.reference(f'factures/{data["numero"]}')
-        ref.set(data)
+        # Sauvegarder dans Firestore
+        doc_id = data['numero']
+        db.collection('invoices').document(doc_id).set(data)
 
-        logger.info(f"✓ Facture created: {data['numero']}")
-        return jsonify({'id': data['numero'], **data}), 201
+        logger.info(f"✓ Facture created: {doc_id}")
+        return jsonify({'id': doc_id, **data}), 201
     except Exception as e:
         logger.error(f"Error creating facture: {e}")
         return jsonify({'error': str(e)}), 500
@@ -161,17 +169,16 @@ def update_facture(facture_id):
         data = request.json or {}
         data['updatedAt'] = datetime.utcnow().timestamp() * 1000
 
-        ref = db.reference(f'factures/{facture_id}')
-
         # Vérifier que la facture existe
-        existing = ref.get()
-        if not existing:
+        doc = db.collection('invoices').document(facture_id).get()
+        if not doc.exists:
             return jsonify({'error': 'Facture not found'}), 404
 
-        ref.update(data)
+        # Mettre à jour dans Firestore
+        db.collection('invoices').document(facture_id).update(data)
 
         logger.info(f"✓ Facture updated: {facture_id}")
-        return jsonify({'id': facture_id, **{**existing, **data}}), 200
+        return jsonify({'id': facture_id, **{**doc.to_dict(), **data}}), 200
     except Exception as e:
         logger.error(f"Error updating facture {facture_id}: {e}")
         return jsonify({'error': str(e)}), 500
@@ -180,14 +187,13 @@ def update_facture(facture_id):
 def delete_facture(facture_id):
     """Supprimer une facture"""
     try:
-        ref = db.reference(f'factures/{facture_id}')
-
         # Vérifier que la facture existe
-        existing = ref.get()
-        if not existing:
+        doc = db.collection('invoices').document(facture_id).get()
+        if not doc.exists:
             return jsonify({'error': 'Facture not found'}), 404
 
-        ref.delete()
+        # Supprimer de Firestore
+        db.collection('invoices').document(facture_id).delete()
 
         logger.info(f"✓ Facture deleted: {facture_id}")
         return jsonify({'message': 'Facture deleted successfully'}), 200
@@ -203,13 +209,8 @@ def delete_facture(facture_id):
 def get_recus():
     """Récupérer tous les reçus"""
     try:
-        ref = db.reference('recus')
-        recus = ref.get()
-
-        if not recus:
-            return jsonify([]), 200
-
-        result = [{'id': k, **v} for k, v in recus.items()]
+        docs = db.collection('receipts').stream()
+        result = docs_to_list(docs)
         return jsonify(result), 200
     except Exception as e:
         logger.error(f"Error fetching recus: {e}")
@@ -232,12 +233,12 @@ def create_recu():
         # Ajouter métadonnées
         data['createdAt'] = datetime.utcnow().timestamp() * 1000
 
-        # Sauvegarder dans Firebase
-        ref = db.reference(f'recus/{data["numero"]}')
-        ref.set(data)
+        # Sauvegarder dans Firestore
+        doc_id = data['numero']
+        db.collection('receipts').document(doc_id).set(data)
 
-        logger.info(f"✓ Reçu created: {data['numero']}")
-        return jsonify({'id': data['numero'], **data}), 201
+        logger.info(f"✓ Reçu created: {doc_id}")
+        return jsonify({'id': doc_id, **data}), 201
     except Exception as e:
         logger.error(f"Error creating recu: {e}")
         return jsonify({'error': str(e)}), 500
@@ -250,13 +251,8 @@ def create_recu():
 def get_depenses():
     """Récupérer toutes les dépenses"""
     try:
-        ref = db.reference('depenses')
-        depenses = ref.get()
-
-        if not depenses:
-            return jsonify([]), 200
-
-        result = [{'id': k, **v} for k, v in depenses.items()]
+        docs = db.collection('expenses').stream()
+        result = docs_to_list(docs)
         return jsonify(result), 200
     except Exception as e:
         logger.error(f"Error fetching depenses: {e}")
@@ -279,12 +275,12 @@ def create_depense():
         # Ajouter métadonnées
         data['createdAt'] = datetime.utcnow().timestamp() * 1000
 
-        # Sauvegarder dans Firebase
-        ref = db.reference(f'depenses/{data["numero"]}')
-        ref.set(data)
+        # Sauvegarder dans Firestore
+        doc_id = data['numero']
+        db.collection('expenses').document(doc_id).set(data)
 
-        logger.info(f"✓ Dépense created: {data['numero']}")
-        return jsonify({'id': data['numero'], **data}), 201
+        logger.info(f"✓ Dépense created: {doc_id}")
+        return jsonify({'id': doc_id, **data}), 201
     except Exception as e:
         logger.error(f"Error creating depense: {e}")
         return jsonify({'error': str(e)}), 500
@@ -297,13 +293,8 @@ def create_depense():
 def get_clients():
     """Récupérer tous les clients"""
     try:
-        ref = db.reference('clients')
-        clients = ref.get()
-
-        if not clients:
-            return jsonify([]), 200
-
-        result = [{'id': k, **v} for k, v in clients.items()]
+        docs = db.collection('clients').stream()
+        result = docs_to_list(docs)
         return jsonify(result), 200
     except Exception as e:
         logger.error(f"Error fetching clients: {e}")
@@ -326,12 +317,12 @@ def create_client():
         # Ajouter métadonnées
         data['createdAt'] = datetime.utcnow().timestamp() * 1000
 
-        # Sauvegarder dans Firebase
-        ref = db.reference(f'clients/{data["email"]}')
-        ref.set(data)
+        # Sauvegarder dans Firestore
+        doc_id = data['email']
+        db.collection('clients').document(doc_id).set(data)
 
         logger.info(f"✓ Client created: {data['nom']}")
-        return jsonify({'id': data['email'], **data}), 201
+        return jsonify({'id': doc_id, **data}), 201
     except Exception as e:
         logger.error(f"Error creating client: {e}")
         return jsonify({'error': str(e)}), 500
@@ -344,13 +335,8 @@ def create_client():
 def get_fournisseurs():
     """Récupérer tous les fournisseurs"""
     try:
-        ref = db.reference('fournisseurs')
-        fournisseurs = ref.get()
-
-        if not fournisseurs:
-            return jsonify([]), 200
-
-        result = [{'id': k, **v} for k, v in fournisseurs.items()]
+        docs = db.collection('suppliers').stream()
+        result = docs_to_list(docs)
         return jsonify(result), 200
     except Exception as e:
         logger.error(f"Error fetching fournisseurs: {e}")
@@ -364,13 +350,8 @@ def get_fournisseurs():
 def get_actifs():
     """Récupérer tous les actifs"""
     try:
-        ref = db.reference('actifs')
-        actifs = ref.get()
-
-        if not actifs:
-            return jsonify([]), 200
-
-        result = [{'id': k, **v} for k, v in actifs.items()]
+        docs = db.collection('assets').stream()
+        result = docs_to_list(docs)
         return jsonify(result), 200
     except Exception as e:
         logger.error(f"Error fetching actifs: {e}")
@@ -384,13 +365,8 @@ def get_actifs():
 def get_passifs():
     """Récupérer tous les passifs"""
     try:
-        ref = db.reference('passifs')
-        passifs = ref.get()
-
-        if not passifs:
-            return jsonify([]), 200
-
-        result = [{'id': k, **v} for k, v in passifs.items()]
+        docs = db.collection('liabilities').stream()
+        result = docs_to_list(docs)
         return jsonify(result), 200
     except Exception as e:
         logger.error(f"Error fetching passifs: {e}")
